@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon PPC Profit & ACOS Calculator</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --dark: #0f172a;
+      --green-bg: #f0fdf4;
+      --green-text: #166534;
+      --green-border: #bbf7d0;
+      --amber-bg: #fffbeb;
+      --amber-text: #b45309;
+      --amber-border: #fde68a;
+      --red-bg: #fef2f2;
+      --red-text: #b91c1c;
+      --red-border: #fecaca;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      line-height: 1.15;
+    }
+
+    .subtext {
+      color: var(--muted);
+      margin-top: 8px;
+      max-width: 760px;
+      font-size: 0.95rem;
+    }
+
+    .badge {
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.green { background: var(--green-bg); color: var(--green-text); border-color: var(--green-border); }
+    .badge.amber { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-border); }
+    .badge.red { background: var(--red-bg); color: var(--red-text); border-color: var(--red-border); }
+
+    .stats, .main-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .stats {
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: 16px;
+    }
+
+    .main-grid {
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .stat-title {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+
+    .stat-note {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .section-note {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      background: white;
+    }
+
+    input:focus {
+      border-color: var(--dark);
+      box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--dark);
+      color: white;
+    }
+
+    .secondary {
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+      padding: 14px;
+      background: #f8fafc;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .metric-list {
+      margin-top: 18px;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .metric-row:last-child { border-bottom: 0; }
+
+    .metric-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .metric-hint {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .metric-value {
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eef2f7;
+      font-size: 0.92rem;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .small-btn {
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .ghost { background: white; border: 1px solid #cbd5e1; color: #334155; }
+    .danger { background: white; border: 1px solid #fecaca; color: #b91c1c; }
+
+    .empty {
+      margin-top: 18px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 18px;
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .stats,
+      .main-grid,
+      .form-grid,
+      .mini-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Amazon PPC Profit & ACOS Calculator</h1>
+        <div class="subtext">
+          A browser-based MVP for Amazon sellers to check profit, break-even ACOS, recommended CPC, and ad viability on both Mac and Windows.
+        </div>
+      </div>
+      <div id="healthBadge" class="badge green">Profitable</div>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <div class="stat-title">Saved Products</div>
+        <div id="savedCount" class="stat-value">0</div>
+        <div class="stat-note">Stored in your browser</div>
+      </div>
+      <div class="card">
+        <div class="stat-title">Average Break-even ACOS</div>
+        <div id="avgAcos" class="stat-value">0%</div>
+        <div class="stat-note">Across saved products</div>
+      </div>
+      <div class="card">
+        <div class="stat-title">Average Profit Before Ads</div>
+        <div id="avgProfit" class="stat-value">$0.00</div>
+        <div class="stat-note">Across saved products</div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="card">
+        <h2 class="section-title">Calculator Input</h2>
+        <p class="section-note">Enter your product economics and ad assumptions.</p>
+
+        <div class="form-grid">
+          <div class="full">
+            <label for="productName">Product Name</label>
+            <input id="productName" placeholder="GLAXMIX Wallet" />
+          </div>
+          <div>
+            <label for="price">Selling Price ($)</label>
+            <input id="price" type="number" step="0.01" value="29.99" />
+          </div>
+          <div>
+            <label for="productCost">Product Cost ($)</label>
+            <input id="productCost" type="number" step="0.01" value="8" />
+          </div>
+          <div>
+            <label for="shippingCost">Shipping Cost ($)</label>
+            <input id="shippingCost" type="number" step="0.01" value="3" />
+          </div>
+          <div>
+            <label for="fbaFee">FBA Fee ($)</label>
+            <input id="fbaFee" type="number" step="0.01" value="5" />
+          </div>
+          <div>
+            <label for="referralFeePercent">Referral Fee (%)</label>
+            <input id="referralFeePercent" type="number" step="0.01" value="15" />
+          </div>
+          <div>
+            <label for="conversionRatePercent">Conversion Rate (%)</label>
+            <input id="conversionRatePercent" type="number" step="0.01" value="12" />
+          </div>
+          <div>
+            <label for="averageCpc">Average CPC ($)</label>
+            <input id="averageCpc" type="number" step="0.01" value="1.2" />
+          </div>
+          <div>
+            <label for="taxOtherCost">Tax / Other Cost ($)</label>
+            <input id="taxOtherCost" type="number" step="0.01" value="0" />
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="primary" id="saveBtn">Save Product</button>
+          <button class="secondary" id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Results</h2>
+        <p class="section-note">Instant view of your profit and advertising limits.</p>
+
+        <div class="mini-stats">
+          <div class="card" style="padding:16px; box-shadow:none;">
+            <div class="stat-title">Profit Before Ads</div>
+            <div id="profitBeforeAds" class="stat-value" style="font-size:1.4rem;">$0.00</div>
+          </div>
+          <div class="card" style="padding:16px; box-shadow:none;">
+            <div class="stat-title">Net Margin</div>
+            <div id="netMargin" class="stat-value" style="font-size:1.4rem;">0%</div>
+          </div>
+          <div class="card" style="padding:16px; box-shadow:none;">
+            <div class="stat-title">Break-even ACOS</div>
+            <div id="breakEvenAcos" class="stat-value" style="font-size:1.4rem;">0%</div>
+          </div>
+          <div class="card" style="padding:16px; box-shadow:none;">
+            <div class="stat-title">Recommended CPC</div>
+            <div id="recommendedCpc" class="stat-value" style="font-size:1.4rem;">$0.00</div>
+          </div>
+        </div>
+
+        <div class="metric-list">
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Referral Fee Amount</div>
+              <div class="metric-hint">Selling price × referral fee %</div>
+            </div>
+            <div id="referralFeeAmount" class="metric-value">$0.00</div>
+          </div>
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Total Cost Before Ads</div>
+              <div class="metric-hint">Product + shipping + FBA + referral + extra cost</div>
+            </div>
+            <div id="totalCostBeforeAds" class="metric-value">$0.00</div>
+          </div>
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Current ACOS</div>
+              <div class="metric-hint">Average CPC ÷ selling price</div>
+            </div>
+            <div id="currentAcos" class="metric-value">0%</div>
+          </div>
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Estimated Clicks to One Order</div>
+              <div class="metric-hint">100 ÷ conversion rate %</div>
+            </div>
+            <div id="estimatedClicksToOrder" class="metric-value">0</div>
+          </div>
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Estimated Ad Spend Per Order</div>
+              <div class="metric-hint">Average CPC × estimated clicks to one order</div>
+            </div>
+            <div id="adSpendPerOrder" class="metric-value">$0.00</div>
+          </div>
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Estimated Profit After Ads</div>
+              <div class="metric-hint">Profit before ads − ad spend per order</div>
+            </div>
+            <div id="estimatedProfitAfterAds" class="metric-value">$0.00</div>
+          </div>
+          <div class="metric-row">
+            <div>
+              <div class="metric-label">Estimated TACOS</div>
+              <div class="metric-hint">Ad spend per order ÷ sales price</div>
+            </div>
+            <div id="estimatedTacos" class="metric-value">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Saved Products</h2>
+      <p class="section-note">Saved in localStorage, so they remain after refresh in the same browser.</p>
+
+      <div id="tableArea" class="table-wrap"></div>
+      <div id="emptyState" class="empty">No products saved yet.</div>
+    </div>
+  </div>
+
+  <script>
+    const fields = [
+      "productName",
+      "price",
+      "productCost",
+      "shippingCost",
+      "fbaFee",
+      "referralFeePercent",
+      "conversionRatePercent",
+      "averageCpc",
+      "taxOtherCost"
+    ];
+
+    const STORAGE_KEY = "amazon_ppc_calculator_saved_products_v1";
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function toNumber(value) {
+      const num = parseFloat(value);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function round2(value) {
+      return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function currency(value) {
+      return `$${round2(value).toFixed(2)}`;
+    }
+
+    function percent(value) {
+      return `${round2(value)}%`;
+    }
+
+    function getForm() {
+      const form = {};
+      fields.forEach((field) => {
+        form[field] = $(field).value;
+      });
+      return form;
+    }
+
+    function setForm(data) {
+      fields.forEach((field) => {
+        $(field).value = data[field] ?? "";
+      });
+      render();
+    }
+
+    function resetForm() {
+      setForm({
+        productName: "",
+        price: "29.99",
+        productCost: "8",
+        shippingCost: "3",
+        fbaFee: "5",
+        referralFeePercent: "15",
+        conversionRatePercent: "12",
+        averageCpc: "1.2",
+        taxOtherCost: "0"
+      });
+    }
+
+    function calculateMetrics(form) {
+      const price = toNumber(form.price);
+      const productCost = toNumber(form.productCost);
+      const shippingCost = toNumber(form.shippingCost);
+      const fbaFee = toNumber(form.fbaFee);
+      const referralFeePercent = toNumber(form.referralFeePercent);
+      const conversionRatePercent = toNumber(form.conversionRatePercent);
+      const averageCpc = toNumber(form.averageCpc);
+      const taxOtherCost = toNumber(form.taxOtherCost);
+
+      const referralFeeAmount = (price * referralFeePercent) / 100;
+      const totalCostBeforeAds = productCost + shippingCost + fbaFee + referralFeeAmount + taxOtherCost;
+      const profitBeforeAds = price - totalCostBeforeAds;
+      const netMarginPercent = price > 0 ? (profitBeforeAds / price) * 100 : 0;
+      const breakEvenAcosPercent = price > 0 ? (profitBeforeAds / price) * 100 : 0;
+      const currentAcosPercent = price > 0 ? (averageCpc / price) * 100 : 0;
+      const conversionRateDecimal = conversionRatePercent / 100;
+      const breakEvenAcosDecimal = breakEvenAcosPercent / 100;
+      const recommendedCpc = price * conversionRateDecimal * breakEvenAcosDecimal;
+      const estimatedClicksToOrder = conversionRatePercent > 0 ? 100 / conversionRatePercent : 0;
+      const adSpendPerOrder = averageCpc * estimatedClicksToOrder;
+      const estimatedProfitAfterAds = profitBeforeAds - adSpendPerOrder;
+      const estimatedTacosPercent = price > 0 ? (adSpendPerOrder / price) * 100 : 0;
+
+      let health = "Profitable";
+      let healthClass = "green";
+
+      if (profitBeforeAds <= 0 || estimatedProfitAfterAds < 0) {
+        health = "Losing Money";
+        healthClass = "red";
+      } else if (averageCpc > recommendedCpc) {
+        health = "Risky";
+        healthClass = "amber";
+      }
+
+      return {
+        price,
+        profitBeforeAds,
+        netMarginPercent,
+        breakEvenAcosPercent,
+        recommendedCpc,
+        referralFeeAmount,
+        totalCostBeforeAds,
+        currentAcosPercent,
+        estimatedClicksToOrder,
+        adSpendPerOrder,
+        estimatedProfitAfterAds,
+        estimatedTacosPercent,
+        health,
+        healthClass
+      };
+    }
+
+    function loadSaved() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveSaved(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function renderPortfolioStats(saved) {
+      $("savedCount").textContent = saved.length;
+      if (!saved.length) {
+        $("avgAcos").textContent = "0%";
+        $("avgProfit").textContent = "$0.00";
+        return;
+      }
+      const avgAcos = saved.reduce((sum, item) => sum + item.metrics.breakEvenAcosPercent, 0) / saved.length;
+      const avgProfit = saved.reduce((sum, item) => sum + item.metrics.profitBeforeAds, 0) / saved.length;
+      $("avgAcos").textContent = percent(avgAcos);
+      $("avgProfit").textContent = currency(avgProfit);
+    }
+
+    function renderSavedTable(saved) {
+      const tableArea = $("tableArea");
+      const emptyState = $("emptyState");
+
+      if (!saved.length) {
+        tableArea.innerHTML = "";
+        emptyState.style.display = "block";
+        return;
+      }
+
+      emptyState.style.display = "none";
+      tableArea.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Profit</th>
+              <th>Break-even ACOS</th>
+              <th>Recommended CPC</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${saved.map((item) => `
+              <tr>
+                <td><strong>${escapeHtml(item.productName)}</strong></td>
+                <td>${currency(item.metrics.price)}</td>
+                <td>${currency(item.metrics.profitBeforeAds)}</td>
+                <td>${percent(item.metrics.breakEvenAcosPercent)}</td>
+                <td>${currency(item.metrics.recommendedCpc)}</td>
+                <td><span class="badge ${item.metrics.healthClass}">${item.metrics.health}</span></td>
+                <td>
+                  <button class="small-btn ghost" onclick="loadProduct('${item.id}')">Load</button>
+                  <button class="small-btn danger" onclick="deleteProduct('${item.id}')">Delete</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function render() {
+      const form = getForm();
+      const metrics = calculateMetrics(form);
+
+      $("profitBeforeAds").textContent = currency(metrics.profitBeforeAds);
+      $("netMargin").textContent = percent(metrics.netMarginPercent);
+      $("breakEvenAcos").textContent = percent(metrics.breakEvenAcosPercent);
+      $("recommendedCpc").textContent = currency(metrics.recommendedCpc);
+      $("referralFeeAmount").textContent = currency(metrics.referralFeeAmount);
+      $("totalCostBeforeAds").textContent = currency(metrics.totalCostBeforeAds);
+      $("currentAcos").textContent = percent(metrics.currentAcosPercent);
+      $("estimatedClicksToOrder").textContent = round2(metrics.estimatedClicksToOrder);
+      $("adSpendPerOrder").textContent = currency(metrics.adSpendPerOrder);
+      $("estimatedProfitAfterAds").textContent = currency(metrics.estimatedProfitAfterAds);
+      $("estimatedTacos").textContent = percent(metrics.estimatedTacosPercent);
+
+      const badge = $("healthBadge");
+      badge.textContent = metrics.health;
+      badge.className = `badge ${metrics.healthClass}`;
+
+      const saved = loadSaved();
+      renderPortfolioStats(saved);
+      renderSavedTable(saved);
+    }
+
+    function saveProduct() {
+      const form = getForm();
+      const metrics = calculateMetrics(form);
+      const saved = loadSaved();
+      const record = {
+        id: String(Date.now()),
+        productName: form.productName.trim() || `Product ${saved.length + 1}`,
+        form,
+        metrics
+      };
+      saved.unshift(record);
+      saveSaved(saved);
+      $("productName").value = "";
+      render();
+    }
+
+    window.loadProduct = function(id) {
+      const saved = loadSaved();
+      const item = saved.find((row) => row.id === id);
+      if (item) setForm(item.form);
+    };
+
+    window.deleteProduct = function(id) {
+      const saved = loadSaved().filter((row) => row.id !== id);
+      saveSaved(saved);
+      render();
+    };
+
+    fields.forEach((field) => {
+      $(field).addEventListener("input", render);
+    });
+
+    $("saveBtn").addEventListener("click", saveProduct);
+    $("resetBtn").addEventListener("click", resetForm);
+
+    resetForm();
+  </script>
+</body>
+</html>
